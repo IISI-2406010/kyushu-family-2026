@@ -1,4 +1,5 @@
 import MarkdownIt from 'markdown-it'
+import { attractionPhotos } from './attractionPhotos.js'
 
 export const tripYear = 2026
 export const hotelIcon = '🏨'
@@ -170,8 +171,9 @@ function dailySections(source, maps, matchNotes) {
       ? ''
       : note
     const hotelArrivalWithMap = /^(抵達|回)飯店/.test(title) && links.length > 0
-    const expandable = Boolean(visibleNote || summaries.length || detailsHtml || hotelArrivalWithMap)
-    return { time, duration, title: markdown.renderInline(title), note: visibleNote, kind, icon, links, summaries, expandable, detailSections, detailsHtml }
+    const photos = attractionPhotos[title] ?? []
+    const expandable = Boolean(visibleNote || summaries.length || detailsHtml || hotelArrivalWithMap || photos.length)
+    return { time, duration, title: markdown.renderInline(title), note: visibleNote, kind, icon, links, summaries, expandable, detailSections, detailsHtml, photos }
   })
   itinerary.html = renderSection(rawItinerary.slice(schedule[0].length))
   return sectionsForDay

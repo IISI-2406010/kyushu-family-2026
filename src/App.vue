@@ -9,19 +9,31 @@ const overviewIcons = {
   航班資訊: '✈️',
   住宿資訊: hotelIcon,
   每日行程: '📅',
-  伴手禮: '🎁',
-  行前須知: '📌',
-  退稅: '🧾',
 }
 const dailySchedule = { title: '每日行程' }
-const overviewSections = overview.flatMap(section =>
-  section.title === '伴手禮' ? [dailySchedule, section] : [section],
-)
-const tabs = [{ id: 'overview', day: '總覽' }, ...days]
-const selected = ref(initialTab(days))
+const guides = [
+  { id: 'shopping', title: '什麼好買', icon: '🛍️', sourceTitle: '伴手禮' },
+  { id: 'before-trip', title: '行前須知', icon: '📌', sourceTitle: '行前須知' },
+  { id: 'tax-refund', title: '退稅指南', icon: '🧾', sourceTitle: '退稅' },
+]
+const menuLinks = [{ id: 'overview', title: '行程總覽', icon: '📋' }, ...guides]
+const overviewSections = [
+  ...overview.filter(section => !guides.some(guide => guide.sourceTitle === section.title)),
+  dailySchedule,
+]
+const tabs = days
+function pageFromHash() {
+  return menuLinks.find(item => location.hash === '#' + item.id)?.id
+}
+const selected = ref(pageFromHash() ?? initialTab(days))
+const menu = ref(null)
 const day = computed(() => days.find(item => item.id === selected.value))
-const sections = computed(() => day.value?.sections ?? overviewSections)
+const guide = computed(() => guides.find(item => item.id === selected.value))
+const guideContent = computed(() => overview.find(section => section.title === guide.value?.sourceTitle)?.html)
+const sections = computed(() => day.value?.sections ?? (guide.value ? [] : overviewSections))
 const now = ref(new Date())
+const openedEntries = ref({})
+const photoBase = import.meta.env.BASE_URL + 'photos/'
 const activeEntry = computed(() => currentEntry(
   day.value,
   sections.value.find(section => section.entries)?.entries ?? [],
@@ -31,18 +43,39 @@ let clockTimer
 function updateClock() {
   now.value = new Date()
 }
+function syncPage() {
+  if (location.hash.startsWith('#section-')) return
+  openDay(pageFromHash() ?? initialTab(days))
+}
 onMounted(() => {
   clockTimer = window.setInterval(updateClock, 1000)
   document.addEventListener('visibilitychange', updateClock)
+  window.addEventListener('hashchange', syncPage)
 })
 onUnmounted(() => {
   window.clearInterval(clockTimer)
   document.removeEventListener('visibilitychange', updateClock)
+  window.removeEventListener('hashchange', syncPage)
 })
 
 function selectTab(id) {
+  if (menu.value) menu.value.open = false
+  if (days.some(item => item.id === id) && pageFromHash()) {
+    history.replaceState(null, '', location.pathname + location.search)
+  }
+  if (selected.value !== id) openedEntries.value = {}
   selected.value = id
   window.scrollTo(0, 0)
+}
+
+function followMenuLink(id) {
+  if (location.hash !== '#' + id) history.pushState(null, '', '#' + id)
+  openDay(id)
+}
+
+function closeMenu() {
+  menu.value.open = false
+  menu.value.querySelector('summary').focus()
 }
 
 async function openDay(id) {
@@ -74,7 +107,19 @@ function navigateTabs(event, index) {
   </header>
 
   <nav class="navigation" aria-label="旅程導覽">
-    <div class="shell tabs" role="tablist" aria-label="選擇日期">
+    <div class="shell date-navigation">
+      <details ref="menu" class="trip-menu" @keydown.esc.stop.prevent="closeMenu">
+        <summary aria-label="開啟旅程選單"><span aria-hidden="true">☰</span></summary>
+        <ul>
+          <li v-for="item in menuLinks" :key="item.id">
+            <a :href="'#' + item.id" :aria-current="selected === item.id ? 'page' : undefined"
+              @click.prevent="followMenuLink(item.id)">
+              <span aria-hidden="true">{{ item.icon }}</span> {{ item.title }}
+            </a>
+          </li>
+        </ul>
+      </details>
+      <div class="tabs" role="tablist" aria-label="選擇日期">
       <button
         v-for="(tab, index) in tabs"
         :id="'tab-' + tab.id"
@@ -83,21 +128,22 @@ function navigateTabs(event, index) {
         role="tab"
         aria-controls="trip-panel"
         :aria-selected="tab.id === selected"
-        :tabindex="tab.id === selected ? 0 : -1"
+        :tabindex="tab.id === selected || (!day && index === 0) ? 0 : -1"
         @click="selectTab(tab.id)"
         @keydown="navigateTabs($event, index)"
       >
         <span>{{ tab.day }}</span>
         <span v-if="tab.date" class="tab-date">{{ tab.date }}</span>
       </button>
+      </div>
     </div>
   </nav>
 
   <main
     id="trip-panel"
     class="shell"
-    role="tabpanel"
-    :aria-labelledby="'tab-' + selected"
+    :role="day ? 'tabpanel' : undefined"
+    :aria-labelledby="day ? 'tab-' + selected : undefined"
     tabindex="0"
   >
     <header v-if="day" class="day-heading">
@@ -114,8 +160,9 @@ function navigateTabs(event, index) {
       <DayWeather :day="day" />
     </header>
     <header v-else class="page-heading">
-      <h1>旅程總覽</h1>
+      <h1>{{ guide?.title ?? '旅程總覽' }}</h1>
     </header>
+    <div v-if="guideContent" class="content-card markdown" v-html="guideContent"></div>
 
     <section
       v-for="(section, index) in sections"
@@ -143,7 +190,8 @@ function navigateTabs(event, index) {
         <ol v-if="section.entries" class="timeline" role="list">
           <li v-for="(entry, entryIndex) in section.entries" :key="entryIndex" :class="entry.kind">
             <component :is="entry.expandable ? 'details' : 'div'" class="timeline-event"
-              :aria-current="activeEntry === entryIndex ? 'step' : undefined">
+              :aria-current="activeEntry === entryIndex ? 'step' : undefined"
+              @toggle="openedEntries[entryIndex] = $event.target.open">
               <component :is="entry.expandable ? 'summary' : 'div'" class="timeline-heading">
                 <span class="timeline-time">{{ entry.time }}<template v-if="entry.duration"> / {{ entry.duration }}</template></span>
                 <span v-if="activeEntry === entryIndex" class="timeline-current">進行中</span>
@@ -170,6 +218,15 @@ function navigateTabs(event, index) {
                     查看{{ title }}詳情
                   </a>
                 </div>
+                <div v-if="openedEntries[entryIndex] && entry.photos.length" class="attraction-photos">
+                  <figure v-for="photo in entry.photos" :key="photo.id">
+                    <img :src="photoBase + photo.id + '.jpg'" :alt="photo.label" decoding="async">
+                    <figcaption>
+                      {{ photo.label }} · <a :href="photo.source">{{ photo.author }}</a>
+                      · <a :href="photo.licenseUrl">{{ photo.license }}</a>（縮圖）
+                    </figcaption>
+                  </figure>
+                </div>
               </div>
             </component>
           </li>
@@ -177,5 +234,13 @@ function navigateTabs(event, index) {
         <div v-if="section.html" class="markdown" v-html="section.html"></div>
       </template>
     </section>
+    <nav v-if="selected === 'overview'" class="guide-cards" aria-label="旅行指南">
+      <a v-for="item in guides" :key="item.id" :href="'#' + item.id"
+        @click.prevent="followMenuLink(item.id)">
+        <span aria-hidden="true">{{ item.icon }}</span>
+        {{ item.title }}
+        <span class="guide-arrow" aria-hidden="true">›</span>
+      </a>
+    </nav>
   </main>
 </template>
