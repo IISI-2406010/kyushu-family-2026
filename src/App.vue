@@ -2,6 +2,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import source from '../行程.md?raw'
 import DayWeather from './DayWeather.vue'
+import TripChecklist from './TripChecklist.vue'
 import { currentEntry, hotelIcon, initialTab, parseTrip, tripYear } from './trip'
 
 const { days, overview } = parseTrip(source)
@@ -13,7 +14,7 @@ const overviewIcons = {
 const dailySchedule = { title: '每日行程' }
 const guides = [
   { id: 'shopping', title: '什麼好買', icon: '🛍️', sourceTitle: '伴手禮' },
-  { id: 'before-trip', title: '行前須知', icon: '📌', sourceTitle: '行前須知' },
+  { id: 'before-trip', title: '行前準備', icon: '📌', sourceTitle: '行前準備' },
   { id: 'tax-refund', title: '退稅指南', icon: '🧾', sourceTitle: '退稅' },
 ]
 const menuLinks = [{ id: 'overview', title: '行程總覽', icon: '📋' }, ...guides]
@@ -48,11 +49,13 @@ function syncPage() {
   openDay(pageFromHash() ?? initialTab(days))
 }
 onMounted(() => {
+  document.addEventListener('click', dismissMenuOutside, true)
   clockTimer = window.setInterval(updateClock, 1000)
   document.addEventListener('visibilitychange', updateClock)
   window.addEventListener('hashchange', syncPage)
 })
 onUnmounted(() => {
+  document.removeEventListener('click', dismissMenuOutside, true)
   window.clearInterval(clockTimer)
   document.removeEventListener('visibilitychange', updateClock)
   window.removeEventListener('hashchange', syncPage)
@@ -71,6 +74,14 @@ function selectTab(id) {
 function followMenuLink(id) {
   if (location.hash !== '#' + id) history.pushState(null, '', '#' + id)
   openDay(id)
+}
+
+function dismissMenuOutside(event) {
+  if (menu.value?.open && !menu.value.contains(event.target)) menu.value.open = false
+}
+
+function dismissMenuOnBlur(event) {
+  if (menu.value?.open && !menu.value.contains(event.relatedTarget)) menu.value.open = false
 }
 
 function closeMenu() {
@@ -108,7 +119,7 @@ function navigateTabs(event, index) {
 
   <nav class="navigation" aria-label="旅程導覽">
     <div class="shell date-navigation">
-      <details ref="menu" class="trip-menu" @keydown.esc.stop.prevent="closeMenu">
+      <details ref="menu" class="trip-menu" @focusout="dismissMenuOnBlur" @keydown.esc.stop.prevent="closeMenu">
         <summary aria-label="開啟旅程選單"><span aria-hidden="true">☰</span></summary>
         <ul>
           <li v-for="item in menuLinks" :key="item.id">
@@ -162,7 +173,8 @@ function navigateTabs(event, index) {
     <header v-else class="page-heading">
       <h1>{{ guide?.title ?? '旅程總覽' }}</h1>
     </header>
-    <div v-if="guideContent" class="content-card markdown" v-html="guideContent"></div>
+    <TripChecklist v-if="guide?.id === 'before-trip'" :html="guideContent" />
+    <div v-else-if="guideContent" class="content-card markdown" v-html="guideContent"></div>
 
     <section
       v-for="(section, index) in sections"
