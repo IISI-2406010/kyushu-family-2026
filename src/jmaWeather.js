@@ -1,29 +1,26 @@
 const areas = {
-  d1: ['450000', '宮崎縣', '宮崎'],
-  d2: ['430000', '熊本縣', '熊本'],
-  d3: ['440000', '大分縣', '大分'],
-  d4: ['400000', '福岡縣', '福岡'],
-  d5: ['400000', '福岡縣', '福岡'],
-  d6: ['400000', '福岡縣', '福岡'],
+  '450000': ['宮崎縣', '宮崎'],
+  '430000': ['熊本縣', '熊本'],
+  '440000': ['大分縣', '大分'],
+  '400000': ['福岡縣', '福岡'],
 }
 
-export async function regionalForecast(day, signal) {
-  const [office] = areas[day.id]
+export async function regionalForecast(day, office, signal) {
   const response = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${office}.json`, {
     signal: AbortSignal.any([signal, AbortSignal.timeout(5000)]),
   })
   if (!response.ok) throw new Error('Regional forecast unavailable')
 
   const [, weekly] = await response.json()
-  return readForecast(day, weekly)
+  return readForecast(day, office, weekly)
 }
 
-export function savedForecast(day) {
-  return readForecast(day, snapshot[areas[day.id][0]])
+export function savedForecast(day, office) {
+  return readForecast(day, office, snapshot[office])
 }
 
-function readForecast(day, weekly) {
-  const [office, region, station] = areas[day.id]
+function readForecast(day, office, weekly) {
+  const [region, station] = areas[office]
   const [weather, temperatures] = weekly.timeSeries
   const weatherIndex = weather.timeDefines.findIndex(time => time.startsWith(day.isoDate))
   if (weatherIndex < 0) return null

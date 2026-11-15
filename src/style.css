@@ -141,7 +141,8 @@ h1 { color: #4d392a; margin: 0; font-size: clamp(1.65rem, 4.4vw, 3rem); line-hei
   --section-tint: #f9ece4;
   --section-border: #c0735a;
 }
-.content-card[data-section="景點"] {
+.content-card[data-section="景點"],
+.content-card[data-section="六天天氣預報"] {
   --section-ink: #3d5c37;
   --section-tint: #edf2e8;
   --section-border: #819575;
@@ -200,9 +201,15 @@ h2 > span { margin-inline-end: .25em; }
   font-weight: 800;
 }
 .day-heading .page-date { margin-top: 4px; }
-.day-weather {
+.day-weather-group {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 8px;
   flex: none;
   margin-inline-start: auto;
+}
+.day-weather {
   min-width: 170px;
   padding: 10px 15px;
   border: 1px solid #d8e3ec;
@@ -342,7 +349,13 @@ h2 > span { margin-inline-end: .25em; }
 @media (max-width: 720px) {
   .guide-cards { grid-template-columns: 1fr; }
   .day-heading { display: grid; grid-template-columns: auto minmax(0, 1fr); }
-  .day-weather { grid-column: 2; margin-inline-start: 0; min-width: 0; }
+  .day-weather-group {
+    grid-column: 2;
+    grid-auto-flow: row;
+    margin-inline-start: 0;
+    min-width: 0;
+  }
+  .day-weather { min-width: 0; }
   .daily-links { grid-template-columns: 1fr; }
   .shell { width: calc(100% - 28px); }
   .masthead-inner { min-height: 54px; }
@@ -390,3 +403,7 @@ h2 > span { margin-inline-end: .25em; }
   background: #f3ede3;
 }
 .attraction-photos figcaption { margin-top: 4px; font-size: .8rem; color: var(--muted); }
+.equal-height-photos img {
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+}

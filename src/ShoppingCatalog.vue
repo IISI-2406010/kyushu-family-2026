@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import catalog from '../伴手禮.md?raw'
 
-const photoImports = import.meta.glob('../docs/伴手禮/*.{png,jpg}', {
+const photoImports = import.meta.glob('../docs/伴手禮/*.{png,jpg,webp}', {
   eager: true, import: 'default', query: '?url',
 })
 // macOS and Git can store the same Japanese filename with different Unicode forms.
@@ -20,7 +20,7 @@ function productLinks(markdown = '') {
 const products = catalog.split('\n')
   .filter(line => line.startsWith('|') && !/^\| (名稱 |---)/.test(line))
   .map(line => {
-    const [name, category, prices, regions, stores, description, photoLink, official, instagram] =
+    const [name, category, prices, regions, stores, description, photoLink, official, social] =
       line.slice(1, -1).split('|').map(cell => cell.trim())
     const [title, subtitle] = name.split('<br>')
     const imagePath = decodeURIComponent(photoLink.slice(photoLink.indexOf('(') + 1, -1))
@@ -30,7 +30,7 @@ const products = catalog.split('\n')
       regions: regions === '—' ? [] : regions.split('、'),
       stores: stores.split('、'),
       photo: photos.get(('../' + imagePath).normalize('NFC')),
-      links: [...productLinks(official), ...productLinks(instagram)],
+      links: [...productLinks(official), ...productLinks(social)],
     }
   })
 

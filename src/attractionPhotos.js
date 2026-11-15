@@ -8,15 +8,26 @@ function photo(id, label, file, author, license) {
   }
 }
 
-const gorge = photo('gorge', '高千穗峽與真名井瀑布', 'Takachiho-gorge.jpg', 'Takasunrise0921', 'CC-BY 2.5')
 const tenjin = photo('tenjin', '福岡天神街景', 'Fukuoka-tenjin.jpg', 'Hactar', 'CC-BY-SA 3.0')
 
 export const attractionPhotos = {
-  '高千穗峽划船': [gorge],
-  '搭乘高千穗小火車、高千穗峽谷散步': [
-    photo('railway', '高千穗小火車', 'Amaterasu.takachiho.jpg', 'ブルーノ', 'CC-BY-SA 4.0'), gorge,
+  '高千穗峽划船': [
+    { id: 'takachiho-boating', label: '高千穗峽的划船與瀑布' },
+    { id: 'takachiho-boating-closeup', label: '從船上近看真名井瀑布' },
   ],
-  '阿蘇火山周邊景點': [photo('aso', '阿蘇中岳火山口', 'Aso_crater.jpg', 'Olli Salonen', 'CC-BY-SA 2.5')],
+  '搭乘高千穗小火車、高千穗峽谷散步': [
+    { id: 'takachiho-train-bridge', label: '高千穗小火車駛過鐵橋' },
+    { id: 'takachiho-train-view', label: '從高千穗小火車望向前方鐵軌' },
+  ],
+  '阿蘇火山周邊景點': [
+    { id: 'aso-grassland', label: '草千里與阿蘇山景' },
+    { id: 'aso-group-photo', label: '草千里合照' },
+    { id: 'aso-green-hill', label: '米塚' },
+  ],
+  '道の駅 あそ望の郷くぎの、Montbell 南阿蘇店': [
+    { id: 'minamiaso-montbell', extension: 'avif', label: 'Montbell 南阿蘇店' },
+    { id: 'asobonosato-kochia', label: '道の駅 あそ望の郷くぎの的波波草' },
+  ],
   '白川水源': [photo('spring', '白川水源', 'Shirakawa_Spring_01.jpg', 'STA3816', 'CC-BY-SA 3.0')],
   '上色見熊野座神社': [photo('kamishikimi', '上色見熊野座神社', 'Kamishikimi_Kumanoimasu_Shrine_001.jpg', 'ageo_akaihana', 'CC-BY 2.0')],
   '九重夢大吊橋': [photo('bridge', '九重夢大吊橋', 'Kokonoe-Yume-Otsurihashi-1.jpg', 'TANAKA Juuyoh', 'CC-BY 2.0')],

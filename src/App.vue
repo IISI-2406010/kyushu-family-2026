@@ -2,6 +2,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import source from '../行程.md?raw'
 import DayWeather from './DayWeather.vue'
+import OverviewWeather from './OverviewWeather.vue'
 import TripChecklist from './TripChecklist.vue'
 import ShoppingCatalog from './ShoppingCatalog.vue'
 import { currentEntry, hotelIcon, initialTab, parseTrip, tripYear } from './trip'
@@ -11,8 +12,10 @@ const overviewIcons = {
   航班資訊: '✈️',
   住宿資訊: hotelIcon,
   每日行程: '📅',
+  六天天氣預報: '⛅',
 }
 const dailySchedule = { title: '每日行程' }
+const weatherOverview = { title: '六天天氣預報' }
 const guides = [
   { id: 'shopping', title: '可買什麼', icon: '🛍️', sourceTitle: '可買什麼' },
   { id: 'before-trip', title: '行前準備', icon: '📌', sourceTitle: '行前準備' },
@@ -21,6 +24,7 @@ const guides = [
 const menuLinks = [{ id: 'overview', title: '行程總覽', icon: '📋' }, ...guides]
 const overviewSections = [
   ...overview.filter(section => !guides.some(guide => guide.sourceTitle === section.title)),
+  weatherOverview,
   dailySchedule,
 ]
 const tabs = days
@@ -210,6 +214,7 @@ function navigateTabs(event, index) {
           </button>
         </li>
       </ul>
+      <OverviewWeather v-else-if="section === weatherOverview" :days="days" />
       <template v-else>
         <ol v-if="section.entries" class="timeline" role="list">
           <li v-for="(entry, entryIndex) in section.entries" :key="entryIndex" :class="entry.kind">
@@ -242,12 +247,15 @@ function navigateTabs(event, index) {
                     查看{{ title }}詳情
                   </a>
                 </div>
-                <div v-if="openedEntries[entryIndex] && entry.photos.length" class="attraction-photos">
+                <div v-if="openedEntries[entryIndex] && entry.photos.length" class="attraction-photos"
+                  :class="{ 'equal-height-photos': ['takachiho-boating', 'takachiho-train-bridge'].includes(entry.photos[0].id) }">
                   <figure v-for="photo in entry.photos" :key="photo.id">
-                    <img :src="photoBase + photo.id + '.jpg'" :alt="photo.label" decoding="async">
+                    <img :src="photoBase + photo.id + '.' + (photo.extension ?? 'jpg')" :alt="photo.label" decoding="async">
                     <figcaption>
-                      {{ photo.label }} · <a :href="photo.source">{{ photo.author }}</a>
-                      · <a :href="photo.licenseUrl">{{ photo.license }}</a>（縮圖）
+                      {{ photo.label }}<template v-if="photo.source">
+                        · <a :href="photo.source">{{ photo.author }}</a>
+                        · <a :href="photo.licenseUrl">{{ photo.license }}</a>（縮圖）
+                      </template>
                     </figcaption>
                   </figure>
                 </div>
