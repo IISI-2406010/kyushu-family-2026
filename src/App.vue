@@ -14,7 +14,7 @@ const overviewIcons = {
 }
 const dailySchedule = { title: '每日行程' }
 const guides = [
-  { id: 'shopping', title: '什麼好買', icon: '🛍️', sourceTitle: '什麼好買' },
+  { id: 'shopping', title: '可買什麼', icon: '🛍️', sourceTitle: '可買什麼' },
   { id: 'before-trip', title: '行前準備', icon: '📌', sourceTitle: '行前準備' },
   { id: 'tax-refund', title: '退稅指南', icon: '🧾', sourceTitle: '退稅' },
 ]
