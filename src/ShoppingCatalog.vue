@@ -2,9 +2,11 @@
 import { computed, ref } from 'vue'
 import catalog from '../伴手禮.md?raw'
 
-const photos = import.meta.glob('../docs/伴手禮/*.{png,jpg}', {
+const photoImports = import.meta.glob('../docs/伴手禮/*.{png,jpg}', {
   eager: true, import: 'default', query: '?url',
 })
+// macOS and Git can store the same Japanese filename with different Unicode forms.
+const photos = new Map(Object.entries(photoImports).map(([path, url]) => [path.normalize('NFC'), url]))
 
 function storeGroup(store) {
   if (store.startsWith('JR博多站')) return 'JR博多站'
@@ -27,7 +29,7 @@ const products = catalog.split('\n')
       prices: prices.split('<br>'),
       regions: regions === '—' ? [] : regions.split('、'),
       stores: stores.split('、'),
-      photo: photos['../' + imagePath],
+      photo: photos.get(('../' + imagePath).normalize('NFC')),
       links: [...productLinks(official), ...productLinks(instagram)],
     }
   })
