@@ -7,21 +7,45 @@ const checked = ref({})
 
 try {
   const saved = JSON.parse(localStorage.getItem(storageKey))
-  if (saved && typeof saved === 'object' && !Array.isArray(saved)) checked.value = saved
+  if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
+    const previousMoneyCheck = saved['日圓現金、信用卡與零錢包']
+    if (previousMoneyCheck === true) {
+      saved['日圓現金'] ??= true
+      saved['信用卡與零錢包'] ??= true
+    }
+    checked.value = saved
+  }
 } catch {
   // The checklist still works for this visit when browser storage is unavailable.
 }
 
 const groups = computed(() => {
   const document = new DOMParser().parseFromString(props.html, 'text/html')
-  return [...document.querySelectorAll('h2')].map(heading => {
-    const list = heading.nextElementSibling
-    const items = [...(list?.querySelectorAll(':scope > li') ?? [])].map(item => ({
-      html: item.innerHTML,
-      title: item.querySelector('strong')?.textContent ?? item.textContent,
-    }))
-    return { title: heading.textContent, items }
-  })
+  const groups = []
+  let group
+  let list
+
+  for (const element of document.body.children) {
+    if (element.tagName === 'H2') {
+      group = { title: element.textContent, lists: [] }
+      groups.push(group)
+      list = undefined
+    } else if (element.tagName === 'H3' && group) {
+      list = { title: element.textContent, items: [] }
+      group.lists.push(list)
+    } else if (element.tagName === 'UL' && group) {
+      if (!list) {
+        list = { title: '', items: [] }
+        group.lists.push(list)
+      }
+      list.items.push(...[...element.children].map(item => ({
+        html: item.innerHTML,
+        title: item.querySelector('strong')?.textContent ?? item.textContent,
+      })))
+    }
+  }
+
+  return groups
 })
 
 function updateItem(title, complete) {
@@ -38,18 +62,30 @@ function updateItem(title, complete) {
   <section v-for="(group, groupIndex) in groups" :key="group.title" class="content-card"
     :aria-labelledby="'checklist-group-' + groupIndex">
     <h2 :id="'checklist-group-' + groupIndex">{{ group.title }}</h2>
-    <ul class="checklist">
-      <li v-for="(item, itemIndex) in group.items" :key="item.title">
-        <input :id="`checklist-${groupIndex}-${itemIndex}`" type="checkbox"
-          :checked="checked[item.title] === true"
-          @change="updateItem(item.title, $event.target.checked)">
-        <label :for="`checklist-${groupIndex}-${itemIndex}`" v-html="item.html"></label>
-      </li>
-    </ul>
+    <div v-for="(list, listIndex) in group.lists" :key="listIndex" class="checklist-group">
+      <h3 v-if="list.title" :id="`checklist-category-${groupIndex}-${listIndex}`">{{ list.title }}</h3>
+      <ul class="checklist" :aria-labelledby="list.title ? `checklist-category-${groupIndex}-${listIndex}` : undefined">
+        <li v-for="(item, itemIndex) in list.items" :key="item.title">
+          <input :id="`checklist-${groupIndex}-${listIndex}-${itemIndex}`" type="checkbox"
+            :checked="checked[item.title] === true"
+            @change="updateItem(item.title, $event.target.checked)">
+          <label :for="`checklist-${groupIndex}-${listIndex}-${itemIndex}`" v-html="item.html"></label>
+        </li>
+      </ul>
+    </div>
   </section>
 </template>
 
 <style scoped>
+.checklist-group + .checklist-group { margin-top: 18px; }
+.checklist-group h3 {
+  margin: 0 0 4px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--section-tint);
+  color: var(--section-ink);
+  font-size: 1rem;
+}
 .checklist { list-style: none; margin: 0; padding: 0; }
 .checklist li { display: flex; align-items: flex-start; gap: 10px; }
 .checklist li + li { border-top: 1px solid var(--border); }
