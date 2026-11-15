@@ -278,9 +278,6 @@ h2 > span { margin-inline-end: .25em; }
 .timeline-event[open] summary::after { transform: translateY(-25%) rotate(225deg); }
 .timeline-event[open] summary { padding-block-end: 4px; }
 .timeline-details { padding: 0 var(--event-padding) var(--event-padding); }
-.shopping-categories { display: grid; gap: 12px; margin-bottom: 20px; }
-.shopping-category summary { color: var(--brown); font-weight: 800; }
-.shopping-category .timeline-details > :last-child { margin-bottom: 0; }
 .timeline .timeline-event[aria-current="step"] {
   background: #fff3d5;
   box-shadow: 0 0 0 2px #a86c25;

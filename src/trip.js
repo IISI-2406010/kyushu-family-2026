@@ -196,9 +196,6 @@ export function parseTrip(source) {
       })
     } else if (title === '總覽') {
       overview.push(...sections(body))
-    } else if (title === '什麼好買') {
-      const references = body.split(/^## /m, 1)[0]
-      overview.push({ title, html: renderSection(references), categories: sections(body) })
     } else if (body.trim()) {
       overview.push({ title, html: renderSection(body) })
     }

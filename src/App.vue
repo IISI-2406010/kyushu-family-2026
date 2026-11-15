@@ -3,6 +3,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import source from '../行程.md?raw'
 import DayWeather from './DayWeather.vue'
 import TripChecklist from './TripChecklist.vue'
+import ShoppingCatalog from './ShoppingCatalog.vue'
 import { currentEntry, hotelIcon, initialTab, parseTrip, tripYear } from './trip'
 
 const { days, overview } = parseTrip(source)
@@ -182,12 +183,7 @@ function navigateTabs(event, index) {
     </header>
     <TripChecklist v-if="guide?.id === 'before-trip'" :html="guideContent" />
     <template v-else-if="guide?.id === 'shopping'">
-      <div class="shopping-categories">
-        <details v-for="category in guideSection?.categories" :key="category.title" class="shopping-category timeline-event">
-          <summary class="timeline-heading">{{ category.title }}</summary>
-          <div class="timeline-details markdown" v-html="category.html"></div>
-        </details>
-      </div>
+      <ShoppingCatalog />
       <div v-if="guideContent" class="content-card markdown" v-html="guideContent"></div>
     </template>
     <div v-else-if="guideContent" class="content-card markdown" v-html="guideContent"></div>
