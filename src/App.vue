@@ -13,7 +13,7 @@ const overviewIcons = {
 }
 const dailySchedule = { title: '每日行程' }
 const guides = [
-  { id: 'shopping', title: '什麼好買', icon: '🛍️', sourceTitle: '伴手禮' },
+  { id: 'shopping', title: '什麼好買', icon: '🛍️', sourceTitle: '什麼好買' },
   { id: 'before-trip', title: '行前準備', icon: '📌', sourceTitle: '行前準備' },
   { id: 'tax-refund', title: '退稅指南', icon: '🧾', sourceTitle: '退稅' },
 ]
@@ -28,9 +28,12 @@ function pageFromHash() {
 }
 const selected = ref(pageFromHash() ?? initialTab(days))
 const menu = ref(null)
+const menuButton = ref(null)
+const menuOpen = ref(false)
 const day = computed(() => days.find(item => item.id === selected.value))
 const guide = computed(() => guides.find(item => item.id === selected.value))
-const guideContent = computed(() => overview.find(section => section.title === guide.value?.sourceTitle)?.html)
+const guideSection = computed(() => overview.find(section => section.title === guide.value?.sourceTitle))
+const guideContent = computed(() => guideSection.value?.html)
 const sections = computed(() => day.value?.sections ?? (guide.value ? [] : overviewSections))
 const now = ref(new Date())
 const openedEntries = ref({})
@@ -62,7 +65,7 @@ onUnmounted(() => {
 })
 
 function selectTab(id) {
-  if (menu.value) menu.value.open = false
+  menuOpen.value = false
   if (days.some(item => item.id === id) && pageFromHash()) {
     history.replaceState(null, '', location.pathname + location.search)
   }
@@ -77,16 +80,17 @@ function followMenuLink(id) {
 }
 
 function dismissMenuOutside(event) {
-  if (menu.value?.open && !menu.value.contains(event.target)) menu.value.open = false
+  if (menuOpen.value && !menu.value?.contains(event.target)) menuOpen.value = false
 }
 
 function dismissMenuOnBlur(event) {
-  if (menu.value?.open && !menu.value.contains(event.relatedTarget)) menu.value.open = false
+  if (event.relatedTarget && !menu.value?.contains(event.relatedTarget)) menuOpen.value = false
 }
 
 function closeMenu() {
-  menu.value.open = false
-  menu.value.querySelector('summary').focus()
+  if (!menuOpen.value) return
+  menuOpen.value = false
+  menuButton.value?.focus()
 }
 
 async function openDay(id) {
@@ -119,9 +123,12 @@ function navigateTabs(event, index) {
 
   <nav class="navigation" aria-label="旅程導覽">
     <div class="shell date-navigation">
-      <details ref="menu" class="trip-menu" @focusout="dismissMenuOnBlur" @keydown.esc.stop.prevent="closeMenu">
-        <summary aria-label="開啟旅程選單"><span aria-hidden="true">☰</span></summary>
-        <ul>
+      <div ref="menu" class="trip-menu" @focusout="dismissMenuOnBlur" @keydown.esc="closeMenu">
+        <button ref="menuButton" type="button" aria-label="旅程選單" aria-controls="trip-menu-links"
+          :aria-expanded="menuOpen" @click="menuOpen = !menuOpen">
+          <span aria-hidden="true">☰</span>
+        </button>
+        <ul v-show="menuOpen" id="trip-menu-links">
           <li v-for="item in menuLinks" :key="item.id">
             <a :href="'#' + item.id" :aria-current="selected === item.id ? 'page' : undefined"
               @click.prevent="followMenuLink(item.id)">
@@ -129,7 +136,7 @@ function navigateTabs(event, index) {
             </a>
           </li>
         </ul>
-      </details>
+      </div>
       <div class="tabs" role="tablist" aria-label="選擇日期">
       <button
         v-for="(tab, index) in tabs"
@@ -174,6 +181,15 @@ function navigateTabs(event, index) {
       <h1>{{ guide?.title ?? '旅程總覽' }}</h1>
     </header>
     <TripChecklist v-if="guide?.id === 'before-trip'" :html="guideContent" />
+    <template v-else-if="guide?.id === 'shopping'">
+      <div class="shopping-categories">
+        <details v-for="category in guideSection?.categories" :key="category.title" class="shopping-category timeline-event">
+          <summary class="timeline-heading">{{ category.title }}</summary>
+          <div class="timeline-details markdown" v-html="category.html"></div>
+        </details>
+      </div>
+      <div v-if="guideContent" class="content-card markdown" v-html="guideContent"></div>
+    </template>
     <div v-else-if="guideContent" class="content-card markdown" v-html="guideContent"></div>
 
     <section
