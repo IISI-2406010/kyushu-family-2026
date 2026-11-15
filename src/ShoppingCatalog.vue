@@ -36,9 +36,12 @@ const products = catalog.split('\n')
 
 const region = ref('')
 const store = ref('')
+const category = ref('')
 const regions = ['福岡', '阿蘇', '由布院', '熊本']
 const storeOptions = [...new Set(products.flatMap(product => product.stores.map(storeGroup)))]
+const categoryOptions = [...new Set(products.map(product => product.category))]
 const results = computed(() => products.filter(product =>
+  (!category.value || product.category === category.value) &&
   (!region.value || product.regions.includes(region.value)) &&
   (!store.value || product.stores.some(location => {
     if (storeGroup(location) !== store.value) return false
@@ -50,6 +53,7 @@ const results = computed(() => products.filter(product =>
 function clearFilters() {
   region.value = ''
   store.value = ''
+  category.value = ''
 }
 </script>
 
@@ -70,10 +74,17 @@ function clearFilters() {
           <option v-for="shop in storeOptions" :key="shop">{{ shop }}</option>
         </select>
       </label>
-      <button type="button" :disabled="!region && !store" @click="clearFilters">清除篩選</button>
+      <label>
+        類型
+        <select v-model="category">
+          <option value="">全部類型</option>
+          <option v-for="option in categoryOptions" :key="option">{{ option }}</option>
+        </select>
+      </label>
+      <button type="button" :disabled="!region && !store && !category" @click="clearFilters">清除篩選</button>
     </div>
     <p class="result-count" role="status">共 {{ results.length }} 項商品</p>
-    <p v-if="!results.length" class="empty">這個區域和店鋪組合沒有商品，請調整篩選條件。</p>
+    <p v-if="!results.length" class="empty">沒有符合篩選條件的商品。</p>
     <ul v-else class="product-grid" role="list">
       <li v-for="product in results" :key="product.title" class="product">
         <div v-if="product.photo" class="product-photo">
