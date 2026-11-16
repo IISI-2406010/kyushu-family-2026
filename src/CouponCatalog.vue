@@ -30,10 +30,11 @@ const coupons = [
   {
     id: 'tsuruha',
     name: '鶴羽藥妝（TSURUHA）',
-    expires: '無相關優惠券',
-    offer: '無相關優惠券',
+    expires: '2027/12/31',
+    offer: '含稅消費滿 ¥10,000 折 3%，滿 ¥30,000 折 5%，滿 ¥50,000 折 7%。',
+    note: '券頁上的條碼是結帳用折扣券條碼，請於付款前開啟即時頁面給店員掃描；免稅／退稅依資格與店鋪辦理，不可與其他優惠合併。',
     url: 'https://livejapan.com/public/operation/coupon/tsuruhadrug/ja.html',
-    source: 'LIVE JAPAN 鶴羽藥妝資訊',
+    source: 'LIVE JAPAN 鶴羽藥妝優惠券（更新日：2026/09/02）；CUBE 官方活動頁列示效期至 2027/12/31',
   },
   {
     id: 'matsukiyo',
@@ -61,6 +62,28 @@ const coupons = [
     url: 'https://www.daimaru-fukuoka.jp/info/detail/?cd=001997',
     source: '大丸福岡天神店官方優惠公告',
   },
+  {
+    id: 'cube',
+    name: 'CUBE 卡專屬優惠',
+    expires: '各店優惠期限不同；「秋日遊」回饋至 2026/11/30',
+    offer: 'CUBE 卡日本指定店家優惠；切換「秋日遊」權益，活動期間日本實體消費另享最高 3.5% 小樹點回饋。',
+    note: '各店折扣、適用門市與期限請以官方活動頁為準；大丸松坂屋百貨指定門市優惠不適用大丸福岡天神店。',
+    stores: [
+      'BicCamera 集團',
+      'COSMOS 指定門市',
+      '成田機場指定免稅店、福岡機場免稅店',
+      '愛電王實體門市、近鐵百貨指定門市',
+      'Snow Peak 指定門市、Victoria 戶外用品店',
+      '大賀藥局指定門市、阪急阪神百貨店',
+      '鶴羽藥妝、日本樂天免稅店（東京銀座店）、日本札幌藥妝免稅店',
+      'SUNDRUG 尚都樂客藥妝、京王百貨新宿店、永旺九州指定商場',
+      '多慶屋、Mitsui Shopping Park LaLaport 指定商場、COREDO 室町指定商場',
+      'ORIHICA 休閒西裝、AOKI 青木西服',
+      'DRUG ELEVEN 指定免稅門市、大丸松坂屋百貨指定門市',
+    ],
+    url: 'https://www.cathay-cube.com.tw/cathaybk/personal/event/overview/credit-card/travel/202501/JP_DiscountPocket',
+    source: '國泰世華 CUBE 旅日優惠活動頁',
+  },
 ]
 </script>
 
@@ -70,11 +93,17 @@ const coupons = [
       <summary class="coupon-summary">
         <span class="coupon-shop">{{ coupon.name }}</span>
         <span class="coupon-expiry">效期：{{ coupon.expires }}</span>
-        <span class="coupon-toggle" aria-hidden="true">展開　＋</span>
+        <span class="coupon-toggle" aria-hidden="true">
+          <span class="coupon-expand-label">展開　＋</span>
+          <span class="coupon-collapse-label">收合　−</span>
+        </span>
       </summary>
       <div class="coupon-expanded">
         <p class="coupon-offer">{{ coupon.offer }}</p>
         <p v-if="coupon.note" class="coupon-note">{{ coupon.note }}</p>
+        <ul v-if="coupon.stores" class="coupon-store-list" aria-label="活動合作店家">
+          <li v-for="store in coupon.stores" :key="store">{{ store }}</li>
+        </ul>
         <p v-else-if="coupon.url" class="coupon-note">未找到可確認於旅程期間使用的優惠券。</p>
         <p class="coupon-expiry coupon-expiry-expanded">效期：{{ coupon.expires }}</p>
         <a v-if="coupon.url" class="coupon-source" :href="coupon.url" target="_blank" rel="noopener noreferrer">
@@ -82,9 +111,6 @@ const coupons = [
           <span aria-hidden="true">↗</span>
         </a>
         <p v-if="coupon.source" class="coupon-source-name">資料來源：{{ coupon.source }}</p>
-        <button class="coupon-close" type="button" @click="$event.currentTarget.closest('details').open = false">
-          收合優惠券
-        </button>
       </div>
     </details>
   </section>

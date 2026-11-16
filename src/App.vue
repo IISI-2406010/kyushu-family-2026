@@ -64,6 +64,7 @@ const pageSectionLinks = computed(() => {
       { id: 'coupon-matsukiyo', title: '松本清' },
       { id: 'coupon-montbell', title: 'mont-bell' },
       { id: 'coupon-daimaru', title: '大丸福岡天神店' },
+      { id: 'coupon-cube', title: 'CUBE 卡專屬優惠' },
     ]
   }
   return []
@@ -325,7 +326,7 @@ function navigateTabs(event, index) {
         <span class="guide-arrow" aria-hidden="true">›</span>
       </a>
     </nav>
-    <p v-if="selected === 'overview'" class="site-updated">網站更新時間 2026/11/16 15:25</p>
+    <p v-if="selected === 'overview'" class="site-updated">網站更新時間 2026/11/16 17:15</p>
   </main>
   <button v-if="showBackToTop" type="button" class="back-to-top" aria-label="回到最上方" @click="backToTop">
     <span aria-hidden="true">↑</span>
