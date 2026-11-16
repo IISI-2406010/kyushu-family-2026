@@ -5,6 +5,7 @@ import DayWeather from './DayWeather.vue'
 import OverviewWeather from './OverviewWeather.vue'
 import TripChecklist from './TripChecklist.vue'
 import ShoppingCatalog from './ShoppingCatalog.vue'
+import CouponCatalog from './CouponCatalog.vue'
 import { currentEntry, hotelIcon, initialTab, parseTrip, tripYear } from './trip'
 
 const { days, overview } = parseTrip(source)
@@ -20,6 +21,7 @@ const guides = [
   { id: 'shopping', title: '可買什麼', icon: '🛍️', sourceTitle: '可買什麼' },
   { id: 'before-trip', title: '行前準備', icon: '📌', sourceTitle: '行前準備' },
   { id: 'tax-refund', title: '退稅指南', icon: '🧾', sourceTitle: '退稅' },
+  { id: 'coupons', title: '優惠券', icon: '🎟️' },
 ]
 const menuLinks = [{ id: 'overview', title: '行程總覽', icon: '📋' }, ...guides]
 const overviewSections = [
@@ -53,6 +55,17 @@ const pageSectionLinks = computed(() => {
   if (guide.value.id === 'tax-refund' && guideContent.value) {
     return [{ id: 'guide-content-card', title: guide.value.title }]
   }
+  if (guide.value.id === 'coupons') {
+    return [
+      { id: 'coupon-donki', title: '唐吉訶德' },
+      { id: 'coupon-bic-camera', title: 'BicCamera' },
+      { id: 'coupon-drug-eleven', title: 'Drug Eleven' },
+      { id: 'coupon-tsuruha', title: '鶴羽藥妝' },
+      { id: 'coupon-matsukiyo', title: '松本清' },
+      { id: 'coupon-montbell', title: 'mont-bell' },
+      { id: 'coupon-daimaru', title: '大丸福岡天神店' },
+    ]
+  }
   return []
 })
 const now = ref(new Date())
@@ -75,6 +88,7 @@ function syncPage() {
   if (location.hash.startsWith('#section-')
     || location.hash.startsWith('#checklist-group-')
     || location.hash.startsWith('#shopping-category-')
+    || location.hash.startsWith('#coupon-')
     || location.hash === '#guide-content-card') return
   openDay(pageFromHash() ?? initialTab(days))
 }
@@ -222,6 +236,7 @@ function navigateTabs(event, index) {
       </nav>
     </header>
     <TripChecklist v-if="guide?.id === 'before-trip'" :html="guideContent" />
+    <CouponCatalog v-else-if="guide?.id === 'coupons'" />
     <template v-else-if="guide?.id === 'shopping'">
       <ShoppingCatalog />
       <div v-if="guideContent" class="content-card markdown" v-html="guideContent"></div>

@@ -79,6 +79,82 @@ a { color: #315e76; text-underline-offset: .21em; overflow-wrap: anywhere; }
 .section-links a:hover { background-color: #f3ede3; }
 .guide-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .guide-cards a { border: 1px solid var(--border); background: var(--paper); min-height: 56px; }
+.coupon-list { display: grid; gap: 12px; }
+.coupon-card {
+  scroll-margin-top: 92px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--paper);
+  overflow: hidden;
+}
+.coupon-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: center;
+  padding: 16px 18px;
+  cursor: pointer;
+  list-style: none;
+}
+.coupon-summary::-webkit-details-marker { display: none; }
+.coupon-summary:hover { background-color: #f3ede3; }
+.coupon-shop { color: var(--brown); font-weight: 800; }
+.coupon-expiry { color: var(--muted); font-size: .9rem; }
+.coupon-toggle { grid-column: 2; grid-row: 1 / span 2; color: var(--brown); font-weight: 700; }
+.coupon-expanded { padding: 4px 18px 18px; }
+.coupon-offer { margin: 8px 0; font-size: 1.15rem; font-weight: 750; }
+.coupon-note { margin: 8px 0; color: var(--muted); }
+.coupon-expiry-expanded { margin: 12px 0; }
+.coupon-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: var(--brown);
+  color: #fff;
+  font-weight: 750;
+  text-decoration: none;
+}
+.coupon-source:hover { background: #766047; }
+.coupon-source-name { color: var(--muted); font-size: .82rem; }
+.coupon-close {
+  display: block;
+  min-height: 44px;
+  margin-top: 16px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--paper);
+  color: var(--brown);
+  font-weight: 700;
+  cursor: pointer;
+}
+.coupon-card[open] {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+  padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  border: 0;
+  border-radius: 0;
+  background: var(--paper);
+}
+.coupon-card[open] .coupon-summary {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  border-bottom: 1px solid var(--border);
+  background: var(--paper);
+}
+.coupon-card[open] .coupon-expanded { padding: 22px 18px; }
+.coupon-card[open] .coupon-offer { font-size: clamp(1.25rem, 5vw, 2rem); }
+.coupon-card[open] .coupon-source { min-height: 64px; font-size: 1.1rem; }
 .back-to-top {
   position: fixed;
   right: max(16px, env(safe-area-inset-right));
