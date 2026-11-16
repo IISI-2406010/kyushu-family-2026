@@ -40,8 +40,24 @@ const guide = computed(() => guides.find(item => item.id === selected.value))
 const guideSection = computed(() => overview.find(section => section.title === guide.value?.sourceTitle))
 const guideContent = computed(() => guideSection.value?.html)
 const sections = computed(() => day.value?.sections ?? (guide.value ? [] : overviewSections))
+const pageSectionLinks = computed(() => {
+  if (!guide.value) {
+    return sections.value.map((section, index) => ({ id: `section-${index}`, title: section.title }))
+  }
+  if (guide.value.id === 'before-trip') {
+    return [...(guideContent.value ?? '').matchAll(/<h2>(.*?)<\/h2>/g)].map(([, title], index) => ({
+      id: `checklist-group-${index}`,
+      title: title.replace(/<[^>]*>/g, '').replaceAll('&amp;', '&'),
+    }))
+  }
+  if (guide.value.id === 'tax-refund' && guideContent.value) {
+    return [{ id: 'guide-content-card', title: guide.value.title }]
+  }
+  return []
+})
 const now = ref(new Date())
 const openedEntries = ref({})
+const showBackToTop = ref(false)
 const photoBase = import.meta.env.BASE_URL + 'photos/'
 const activeEntry = computed(() => currentEntry(
   day.value,
@@ -52,19 +68,28 @@ let clockTimer
 function updateClock() {
   now.value = new Date()
 }
+function updateBackToTopVisibility() {
+  showBackToTop.value = window.scrollY > 300
+}
 function syncPage() {
-  if (location.hash.startsWith('#section-')) return
+  if (location.hash.startsWith('#section-')
+    || location.hash.startsWith('#checklist-group-')
+    || location.hash.startsWith('#shopping-category-')
+    || location.hash === '#guide-content-card') return
   openDay(pageFromHash() ?? initialTab(days))
 }
 onMounted(() => {
   document.addEventListener('click', dismissMenuOutside, true)
   clockTimer = window.setInterval(updateClock, 1000)
+  window.addEventListener('scroll', updateBackToTopVisibility, { passive: true })
+  updateBackToTopVisibility()
   document.addEventListener('visibilitychange', updateClock)
   window.addEventListener('hashchange', syncPage)
 })
 onUnmounted(() => {
   document.removeEventListener('click', dismissMenuOutside, true)
   window.clearInterval(clockTimer)
+  window.removeEventListener('scroll', updateBackToTopVisibility)
   document.removeEventListener('visibilitychange', updateClock)
   window.removeEventListener('hashchange', syncPage)
 })
@@ -82,6 +107,11 @@ function selectTab(id) {
 function followMenuLink(id) {
   if (location.hash !== '#' + id) history.pushState(null, '', '#' + id)
   openDay(id)
+}
+
+function backToTop() {
+  window.scrollTo(0, 0)
+  showBackToTop.value = false
 }
 
 function dismissMenuOutside(event) {
@@ -165,6 +195,7 @@ function navigateTabs(event, index) {
   <main
     id="trip-panel"
     class="shell"
+    :class="{ 'guide-shopping': guide?.id === 'shopping', 'guide-before-trip': guide?.id === 'before-trip' }"
     :role="day ? 'tabpanel' : undefined"
     :aria-labelledby="day ? 'tab-' + selected : undefined"
     tabindex="0"
@@ -184,13 +215,18 @@ function navigateTabs(event, index) {
     </header>
     <header v-else class="page-heading">
       <h1>{{ guide?.title ?? '旅程總覽' }}</h1>
+      <nav v-if="pageSectionLinks.length" class="section-links" aria-label="跳到段落">
+        <a v-for="section in pageSectionLinks" :key="section.id" :href="'#' + section.id">
+          {{ section.title }}
+        </a>
+      </nav>
     </header>
     <TripChecklist v-if="guide?.id === 'before-trip'" :html="guideContent" />
     <template v-else-if="guide?.id === 'shopping'">
       <ShoppingCatalog />
       <div v-if="guideContent" class="content-card markdown" v-html="guideContent"></div>
     </template>
-    <div v-else-if="guideContent" class="content-card markdown" v-html="guideContent"></div>
+    <div v-else-if="guideContent" id="guide-content-card" class="content-card markdown" v-html="guideContent"></div>
 
     <section
       v-for="(section, index) in sections"
@@ -274,5 +310,10 @@ function navigateTabs(event, index) {
         <span class="guide-arrow" aria-hidden="true">›</span>
       </a>
     </nav>
+    <p v-if="selected === 'overview'" class="site-updated">網站更新時間 2026/11/16 15:25</p>
   </main>
+  <button v-if="showBackToTop" type="button" class="back-to-top" aria-label="回到最上方" @click="backToTop">
+    <span aria-hidden="true">↑</span>
+    回到最上方
+  </button>
 </template>
